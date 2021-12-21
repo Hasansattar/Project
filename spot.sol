@@ -13,10 +13,25 @@ contract TheSpot is ERC721, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    //whitelisted
+    //put whitelist people in array
+
+    struct Whitelist{
+        address addr;
+    }
+
+    Whitelist[] public people;
+
+    //check  whitelisted is true and  false 
     mapping(address => bool) whitelistedAddresses;
+    
      Counters.Counter public _whitelistedCount;
-    uint256 public timeWhitelisted;
+     
+     //max mint whitelist = 1
+     uint private maxMintAmount=1; 
+
+     //time start and end whitelisted
+    uint256 public timeStartWhitelisted;
+    uint256 public timeEndWhitelisted;
 
     uint256 public constant MINT_NFT_FEE = .69 ether;
 
@@ -28,9 +43,10 @@ contract TheSpot is ERC721, Ownable {
 
     address public ADMIN_WALLET = 0x32bD2811Fb91BC46756232A0B8c6b2902D7d8763;
 
-    constructor() ERC721("The Spot", "SPOT") {     
-      timeWhitelisted=block.timestamp +  2 days;  
-     
+    constructor() ERC721("The Spot", "SPOT") {   
+        //time whitelisted
+       timeStartWhitelisted=block.timestamp + 1 days;  
+       timeEndWhitelisted=block.timestamp + 2 days; 
         BASE_URI_EXTENDED = "https://meta.spot/";
         _totalSupply = 610;
     }
@@ -39,8 +55,15 @@ contract TheSpot is ERC721, Ownable {
          // whitelisted 
     function addUserWhitelist(address _addressToWhitelist) public onlyOwner {
       whitelistedAddresses[_addressToWhitelist] = true;
+      Whitelist memory addres = Whitelist(_addressToWhitelist);
+      people.push(addres);
       _whitelistedCount.increment();
     }
+
+
+function getAllPeoplewhitelist() public view onlyOwner returns(Whitelist[] memory){
+    return people;
+}
        
        //blacklisted
     function addUserblacklist(address _addressToWhitelist) public onlyOwner {
@@ -77,8 +100,9 @@ contract TheSpot is ERC721, Ownable {
 
         //mint whitelisted
 
-        if(whitelistedAddresses[msg.sender] = true && block.timestamp >=timeWhitelisted ){
+        if(whitelistedAddresses[msg.sender] = true && timeStartWhitelisted >=timeEndWhitelisted ){
         require(_whitelistedCount.current() >=11,"end white listed");
+           require(tokenAmount <= maxMintAmount);
            _tokenIds.increment();
             uint256 newItemId = _tokenIds.current();
             _mint(msg.sender, newItemId);
